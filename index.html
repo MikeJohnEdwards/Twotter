@@ -309,7 +309,7 @@
   </div>
 
   <script>
-    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Update this if needed
+    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Update if needed
 
     const postForm = document.getElementById('postForm');
     const postsContainer = document.getElementById('postsContainer');
@@ -318,7 +318,7 @@
     function updateAuthUI() {
       const user = getLoggedInUser();
       if (user) {
-        authStatus.textContent = Logged in as ${user.username};
+        authStatus.textContent = `Logged in as ${user.username}`;
         postForm.style.display = 'flex';
       } else {
         authStatus.textContent = 'Not logged in';
@@ -346,7 +346,7 @@
         return;
       }
 
-      const res = await fetch(${backendURL}/register, {
+      const res = await fetch(`${backendURL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -369,7 +369,7 @@
         return;
       }
 
-      const res = await fetch(${backendURL}/login, {
+      const res = await fetch(`${backendURL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -397,11 +397,16 @@
         return;
       }
 
-      await fetch(${backendURL}/posts, {
+      const res = await fetch(`${backendURL}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content, username: user.username })
       });
+
+      if (!res.ok) {
+        alert('Failed to post');
+        return;
+      }
 
       postForm.reset();
       loadPosts();
@@ -410,28 +415,35 @@
     // Load posts from backend including likes and comments
     async function loadPosts() {
       const user = getLoggedInUser();
-      const res = await fetch(${backendURL}/posts);
+      const res = await fetch(`${backendURL}/posts`);
+      if (!res.ok) {
+        postsContainer.innerHTML = '<p>Failed to load posts.</p>';
+        return;
+      }
       const posts = await res.json();
 
       postsContainer.innerHTML = '';
 
       // Reverse so newest first
       posts.reverse().forEach(post => {
-        const div = document.createElement('div');
-        div.className = 'post';
-
-        // Likes and comments stored in post.likes and post.comments (or empty arrays)
-        // Fallback if not present
         if (!post.likes) post.likes = [];
         if (!post.comments) post.comments = [];
 
         const likedByUser = user ? post.likes.includes(user.username) : false;
         const likesCount = post.likes.length;
 
-        div.innerHTML = 
-          <h3>${post.title}</h3>
-          <p>${post.content}</p>
-          <small>Posted by: ${post.username}</small>
+        const div = document.createElement('div');
+        div.className = 'post';
+
+        // Build comments HTML safely
+        const commentsHTML = post.comments.map(c =>
+          `<div class="comment"><strong>${escapeHTML(c.username)}:</strong> ${escapeHTML(c.text)}</div>`
+        ).join('');
+
+        div.innerHTML = `
+          <h3>${escapeHTML(post.title)}</h3>
+          <p>${escapeHTML(post.content)}</p>
+          <small>Posted by: ${escapeHTML(post.username)}</small>
 
           <div class="post-actions">
             <button class="like-btn ${likedByUser ? 'liked' : ''}" aria-label="Like post">
@@ -441,13 +453,13 @@
           </div>
 
           <div class="comments-section">
-            ${post.comments.map(c => <div class="comment"><strong>${c.username}:</strong> ${c.text}</div>).join('')}
+            ${commentsHTML}
             <form class="comment-form">
               <input type="text" placeholder="Add a comment..." required />
               <button type="submit">Reply</button>
             </form>
           </div>
-        ;
+        `;
 
         // Delete button if user is admin or post owner
         if (user && (user.username === 'admin' || user.username === post.username)) {
@@ -456,12 +468,13 @@
           delBtn.className = 'delete-btn';
           delBtn.onclick = async () => {
             if (!confirm('Are you sure you want to delete this post?')) return;
-            await fetch(${backendURL}/posts/${post._id}, {
+            const delRes = await fetch(`${backendURL}/posts/${post._id}`, {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ username: user.username })
             });
-            loadPosts();
+            if (delRes.ok) loadPosts();
+            else alert('Failed to delete post.');
           };
           div.appendChild(delBtn);
         }
@@ -485,14 +498,14 @@
             updatedLikes = [...post.likes, user.username];
           }
 
-          // Update on backend
-          await fetch(${backendURL}/posts/${post._id}/likes, {
+          const res = await fetch(`${backendURL}/posts/${post._id}/likes`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ likes: updatedLikes })
           });
 
-          loadPosts();
+          if (res.ok) loadPosts();
+          else alert('Failed to update likes.');
         });
 
         // Comment button toggles comments section
@@ -517,15 +530,33 @@
 
           const newComments = [...post.comments, { username: user.username, text: commentText }];
 
-          await fetch(${backendURL}/posts/${post._id}/comments, {
+          const res = await fetch(`${backendURL}/posts/${post._id}/comments`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ comments: newComments })
           });
 
-          input.value = '';
-          loadPosts();
+          if (res.ok) {
+            input.value = '';
+            loadPosts();
+          } else {
+            alert('Failed to add comment.');
+          }
         });
+      });
+    }
+
+    // Simple HTML escape function to avoid injection
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, function (match) {
+        const escape = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        };
+        return escape[match];
       });
     }
 
