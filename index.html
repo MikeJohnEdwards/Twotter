@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Stylish Blog</title>
+  <title>Stylish Blog with Likes and Comments</title>
   <style>
     /* Reset and base */
     body {
@@ -21,7 +21,7 @@
       border-left: 1px solid #ddd;
       border-right: 1px solid #ddd;
       min-height: 100vh;
-      padding: 0 16px;
+      padding: 0 16px 24px;
       box-sizing: border-box;
     }
 
@@ -42,25 +42,31 @@
       color: #536471;
       border-bottom: 1px solid #eee;
       text-align: center;
+      user-select: none;
     }
 
-    /* Auth form */
+    /* Auth form - container flex row for inputs and buttons */
     .auth-form {
       padding: 12px 0;
       border-bottom: 1px solid #eee;
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: center;
+      align-items: center;
     }
-    .auth-form input {
+    /* Inputs */
+    .auth-form input[type="text"],
+    .auth-form input[type="password"] {
       border: 1px solid #ccd6dd;
       border-radius: 9999px;
       padding: 8px 16px;
       font-size: 14px;
       width: 140px;
       outline-offset: 2px;
+      box-sizing: border-box;
     }
+    /* Buttons */
     .auth-form button {
       background-color: #1d9bf0; /* Twitter blue */
       border: none;
@@ -71,6 +77,7 @@
       cursor: pointer;
       font-size: 14px;
       transition: background-color 0.2s ease;
+      white-space: nowrap;
     }
     .auth-form button:hover {
       background-color: #1a8cd8;
@@ -92,6 +99,8 @@
       font-size: 16px;
       resize: none;
       outline-offset: 2px;
+      box-sizing: border-box;
+      width: 100%;
     }
     #postForm button {
       align-self: flex-end;
@@ -121,7 +130,7 @@
     #postsContainer {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
       padding-bottom: 24px;
     }
 
@@ -134,6 +143,9 @@
       transition: background-color 0.15s ease;
       position: relative;
       cursor: default;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     .post:hover {
       background-color: #f5f8fa;
@@ -147,7 +159,7 @@
     }
 
     .post p {
-      margin: 0 0 8px 0;
+      margin: 0;
       font-size: 15px;
       line-height: 1.4;
       color: #536471;
@@ -158,6 +170,7 @@
       color: #536471;
       font-size: 13px;
       font-weight: 600;
+      user-select: none;
     }
 
     .delete-btn {
@@ -177,6 +190,97 @@
     .delete-btn:hover {
       background-color: #f4212e;
       color: white;
+    }
+
+    /* Like & Comment buttons container */
+    .post-actions {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      user-select: none;
+    }
+    .like-btn, .comment-btn {
+      cursor: pointer;
+      color: #536471;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 12px;
+      padding: 6px 12px;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      border: none;
+      background: transparent;
+    }
+    .like-btn.liked {
+      color: #e0245e; /* Twitter red for liked */
+    }
+    .like-btn:hover,
+    .comment-btn:hover {
+      background-color: #e8f5fd;
+      color: #1d9bf0;
+    }
+
+    /* Likes count */
+    .likes-count {
+      margin-left: 6px;
+      color: #536471;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    /* Comments section */
+    .comments-section {
+      border-top: 1px solid #e1e8ed;
+      padding-top: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .comments-section.active {
+      display: flex;
+    }
+    .comment {
+      background: #f5f8fa;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 14px;
+      color: #536471;
+      line-height: 1.3;
+    }
+    .comment strong {
+      color: #0f1419;
+    }
+
+    /* Comment input */
+    .comment-form {
+      display: flex;
+      margin-top: 8px;
+      gap: 8px;
+    }
+    .comment-form input {
+      flex-grow: 1;
+      border: 1px solid #ccd6dd;
+      border-radius: 9999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      outline-offset: 2px;
+      box-sizing: border-box;
+    }
+    .comment-form button {
+      background-color: #1d9bf0;
+      border: none;
+      color: white;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+    }
+    .comment-form button:hover {
+      background-color: #1a8cd8;
     }
   </style>
 </head>
@@ -205,8 +309,8 @@
   </div>
 
   <script>
-    // Your existing JavaScript remains unchanged
-    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Update if needed
+    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Update this if needed
+
     const postForm = document.getElementById('postForm');
     const postsContainer = document.getElementById('postsContainer');
     const authStatus = document.getElementById('authStatus');
@@ -234,8 +338,13 @@
     }
 
     async function register() {
-      const username = document.getElementById('authUsername').value;
-      const password = document.getElementById('authPassword').value;
+      const username = document.getElementById('authUsername').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+
+      if (!username || !password) {
+        alert('Please enter username and password');
+        return;
+      }
 
       const res = await fetch(`${backendURL}/register`, {
         method: 'POST',
@@ -252,8 +361,13 @@
     }
 
     async function login() {
-      const username = document.getElementById('authUsername').value;
-      const password = document.getElementById('authPassword').value;
+      const username = document.getElementById('authUsername').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+
+      if (!username || !password) {
+        alert('Please enter username and password');
+        return;
+      }
 
       const res = await fetch(`${backendURL}/login`, {
         method: 'POST',
@@ -275,8 +389,13 @@
       const user = getLoggedInUser();
       if (!user) return alert('You must be logged in to post.');
 
-      const title = document.getElementById('title').value;
-      const content = document.getElementById('content').value;
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+
+      if (!title || !content) {
+        alert('Title and content cannot be empty');
+        return;
+      }
 
       await fetch(`${backendURL}/posts`, {
         method: 'POST',
@@ -288,26 +407,55 @@
       loadPosts();
     });
 
+    // Load posts from backend including likes and comments
     async function loadPosts() {
       const user = getLoggedInUser();
       const res = await fetch(`${backendURL}/posts`);
       const posts = await res.json();
+
       postsContainer.innerHTML = '';
 
+      // Reverse so newest first
       posts.reverse().forEach(post => {
         const div = document.createElement('div');
         div.className = 'post';
+
+        // Likes and comments stored in post.likes and post.comments (or empty arrays)
+        // Fallback if not present
+        if (!post.likes) post.likes = [];
+        if (!post.comments) post.comments = [];
+
+        const likedByUser = user ? post.likes.includes(user.username) : false;
+        const likesCount = post.likes.length;
+
         div.innerHTML = `
           <h3>${post.title}</h3>
           <p>${post.content}</p>
           <small>Posted by: ${post.username}</small>
+
+          <div class="post-actions">
+            <button class="like-btn ${likedByUser ? 'liked' : ''}" aria-label="Like post">
+              ♥ Like <span class="likes-count">${likesCount}</span>
+            </button>
+            <button class="comment-btn" aria-label="Comment on post">💬 Comment</button>
+          </div>
+
+          <div class="comments-section">
+            ${post.comments.map(c => `<div class="comment"><strong>${c.username}:</strong> ${c.text}</div>`).join('')}
+            <form class="comment-form">
+              <input type="text" placeholder="Add a comment..." required />
+              <button type="submit">Reply</button>
+            </form>
+          </div>
         `;
 
+        // Delete button if user is admin or post owner
         if (user && (user.username === 'admin' || user.username === post.username)) {
           const delBtn = document.createElement('button');
           delBtn.textContent = 'Delete';
           delBtn.className = 'delete-btn';
           delBtn.onclick = async () => {
+            if (!confirm('Are you sure you want to delete this post?')) return;
             await fetch(`${backendURL}/posts/${post._id}`, {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
@@ -319,6 +467,65 @@
         }
 
         postsContainer.appendChild(div);
+
+        // Like button functionality
+        const likeBtn = div.querySelector('.like-btn');
+        likeBtn.addEventListener('click', async () => {
+          if (!user) {
+            alert('You must be logged in to like posts.');
+            return;
+          }
+
+          let updatedLikes;
+          if (likedByUser) {
+            // Remove like
+            updatedLikes = post.likes.filter(u => u !== user.username);
+          } else {
+            // Add like
+            updatedLikes = [...post.likes, user.username];
+          }
+
+          // Update on backend
+          await fetch(`${backendURL}/posts/${post._id}/likes`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ likes: updatedLikes })
+          });
+
+          loadPosts();
+        });
+
+        // Comment button toggles comments section
+        const commentBtn = div.querySelector('.comment-btn');
+        const commentsSection = div.querySelector('.comments-section');
+
+        commentBtn.addEventListener('click', () => {
+          commentsSection.classList.toggle('active');
+        });
+
+        // Comment form submission
+        const commentForm = div.querySelector('.comment-form');
+        commentForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!user) {
+            alert('You must be logged in to comment.');
+            return;
+          }
+          const input = commentForm.querySelector('input');
+          const commentText = input.value.trim();
+          if (!commentText) return;
+
+          const newComments = [...post.comments, { username: user.username, text: commentText }];
+
+          await fetch(`${backendURL}/posts/${post._id}/comments`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comments: newComments })
+          });
+
+          input.value = '';
+          loadPosts();
+        });
       });
     }
 
