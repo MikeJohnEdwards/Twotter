@@ -3,34 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Simple Blog</title>
+  <title>Stylish Blog</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 2rem auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(120deg, #f0f4f8, #d9e4ec);
+      margin: 0;
+      padding: 2rem;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    form {
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    form, .auth-form {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
     }
+
     input, textarea {
-      display: block;
       width: 100%;
+      padding: 0.8rem;
       margin-bottom: 1rem;
-      padding: 0.5rem;
-    }
-    .post {
       border: 1px solid #ccc;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #0077ff;
+      color: #fff;
+      padding: 0.7rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #005fcc;
+    }
+
+    .post {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .post h3 {
+      margin-top: 0;
+      color: #222;
+    }
+
+    .post p {
+      color: #555;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
       border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .delete-btn:hover {
+      background: #d9363e;
+    }
+
+    #authStatus {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Simple Blog</h1>
+  <h1>Stylish Blog</h1>
 
-  <form id="postForm">
+  <div id="authStatus">Not logged in</div>
+
+  <div class="auth-form">
+    <h2>Register or Login</h2>
+    <input type="text" id="authUsername" placeholder="Username" required />
+    <input type="password" id="authPassword" placeholder="Password" required />
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <form id="postForm" style="display: none;">
     <input type="text" id="title" placeholder="Post Title" required />
     <textarea id="content" placeholder="Write your post..." rows="5" required></textarea>
     <button type="submit">Submit Post</button>
@@ -40,39 +118,119 @@
   <div id="postsContainer"></div>
 
   <script>
-    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Replace this!
-
-    const form = document.getElementById('postForm');
+    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Replace with your actual backend
+    const postForm = document.getElementById('postForm');
     const postsContainer = document.getElementById('postsContainer');
+    const authStatus = document.getElementById('authStatus');
 
-    async function loadPosts() {
-      const res = await fetch(`${backendURL}/posts`);
-      const posts = await res.json();
-      postsContainer.innerHTML = '';
-      posts.reverse().forEach(post => {
-        const div = document.createElement('div');
-        div.className = 'post';
-        div.innerHTML = `<h3>${post.title}</h3><p>${post.content}</p>`;
-        postsContainer.appendChild(div);
-      });
+    function updateAuthUI() {
+      const user = getLoggedInUser();
+      if (user) {
+        authStatus.textContent = `Logged in as ${user.username}`;
+        postForm.style.display = 'block';
+      } else {
+        authStatus.textContent = 'Not logged in';
+        postForm.style.display = 'none';
+      }
     }
 
-    form.addEventListener('submit', async (e) => {
+    function getLoggedInUser() {
+      const user = localStorage.getItem('user');
+      return user ? JSON.parse(user) : null;
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      updateAuthUI();
+      loadPosts();
+    }
+
+    async function register() {
+      const username = document.getElementById('authUsername').value;
+      const password = document.getElementById('authPassword').value;
+
+      await fetch(`${backendURL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      alert('Registered. Now login.');
+    }
+
+    async function login() {
+      const username = document.getElementById('authUsername').value;
+      const password = document.getElementById('authPassword').value;
+
+      const res = await fetch(`${backendURL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (res.ok) {
+        localStorage.setItem('user', JSON.stringify({ username }));
+        updateAuthUI();
+        loadPosts();
+      } else {
+        alert('Login failed');
+      }
+    }
+
+    postForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const user = getLoggedInUser();
+      if (!user) return alert('You must be logged in to post.');
+
       const title = document.getElementById('title').value;
       const content = document.getElementById('content').value;
 
       await fetch(`${backendURL}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
+        body: JSON.stringify({ title, content, username: user.username })
       });
 
-      form.reset();
-      loadPosts(); // Refresh posts list
+      postForm.reset();
+      loadPosts();
     });
 
-    loadPosts(); // Load posts on page load
+    async function loadPosts() {
+      const user = getLoggedInUser();
+      const res = await fetch(`${backendURL}/posts`);
+      const posts = await res.json();
+      postsContainer.innerHTML = '';
+
+      posts.reverse().forEach(post => {
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `
+          <h3>${post.title}</h3>
+          <p>${post.content}</p>
+          <small>Posted by: ${post.username}</small>
+        `;
+
+        if (user && post.username === user.username) {
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.className = 'delete-btn';
+          delBtn.onclick = async () => {
+            await fetch(`${backendURL}/posts/${post._id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: user.username })
+            });
+            loadPosts();
+          };
+          div.appendChild(delBtn);
+        }
+
+        postsContainer.appendChild(div);
+      });
+    }
+
+    updateAuthUI();
+    loadPosts();
   </script>
 </body>
 </html>
