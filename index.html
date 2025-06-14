@@ -5,92 +5,188 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stylish Blog</title>
   <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(120deg, #f0f4f8, #d9e4ec);
+      background: #e6ecf0; /* Twitter light gray-blue background */
       margin: 0;
-      padding: 2rem;
-      max-width: 800px;
+      padding: 0;
+      max-width: 600px;
       margin-left: auto;
       margin-right: auto;
+      color: #0f1419; /* Twitter text color */
     }
 
-    h1, h2 {
+    h1 {
+      font-weight: 800;
+      font-size: 1.75rem;
       text-align: center;
-      color: #333;
+      padding: 1rem 0;
+      border-bottom: 1px solid #cfd9de;
+      margin: 0;
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    form, .auth-form {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 0.8rem;
+    h2 {
+      font-weight: 700;
+      font-size: 1.2rem;
       margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
+      color: #536471;
     }
 
-    button {
-      background: #0077ff;
-      color: #fff;
-      padding: 0.7rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.3s;
+    /* Auth form */
+    .auth-form {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #cfd9de;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
     }
 
-    button:hover {
-      background: #005fcc;
+    .auth-form input {
+      flex: 1 1 120px;
+      border: 1px solid #aab8c2;
+      border-radius: 9999px; /* pill shape */
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      color: #0f1419;
+      background: #f5f8fa;
+      transition: border-color 0.2s;
+    }
+    .auth-form input:focus {
+      border-color: #1d9bf0;
+      outline: none;
+      background: white;
     }
 
-    .post {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      position: relative;
-    }
-
-    .post h3 {
-      margin-top: 0;
-      color: #222;
-    }
-
-    .post p {
-      color: #555;
-    }
-
-    .delete-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: #ff4d4f;
+    .auth-form button {
+      background: #1d9bf0;
       color: white;
       border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
+      border-radius: 9999px;
+      padding: 0.5rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
       cursor: pointer;
-      font-size: 0.8rem;
+      transition: background 0.2s;
+      flex: 0 0 auto;
     }
-
-    .delete-btn:hover {
-      background: #d9363e;
+    .auth-form button:hover {
+      background: #0c7abf;
     }
 
     #authStatus {
       text-align: center;
+      padding: 0.5rem 0;
+      font-weight: 600;
+      color: #536471;
+      background: white;
+      border-bottom: 1px solid #cfd9de;
+      margin: 0;
+    }
+
+    /* Post form */
+    #postForm {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #cfd9de;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    #postForm input,
+    #postForm textarea {
+      border: 1px solid #aab8c2;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      color: #0f1419;
+      background: #f5f8fa;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    #postForm input:focus,
+    #postForm textarea:focus {
+      border-color: #1d9bf0;
+      outline: none;
+      background: white;
+    }
+    #postForm button {
+      align-self: flex-end;
+      background: #1d9bf0;
+      border-radius: 9999px;
+      border: none;
+      color: white;
+      padding: 0.6rem 1.5rem;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #postForm button:hover {
+      background: #0c7abf;
+    }
+
+    /* Posts list */
+    h2 + #postsContainer {
+      margin-top: 1rem;
+    }
+
+    .post {
+      background: white;
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
       margin-bottom: 1rem;
-      font-weight: bold;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+      border: 1px solid #e1e8ed;
+      position: relative;
+      word-wrap: break-word;
+    }
+
+    .post h3 {
+      font-weight: 700;
+      margin: 0 0 0.3rem 0;
+      font-size: 1.1rem;
+      color: #0f1419;
+    }
+
+    .post p {
+      margin: 0 0 0.6rem 0;
+      font-size: 1rem;
+      color: #536471;
+      line-height: 1.4;
+    }
+
+    .post small {
+      font-size: 0.85rem;
+      color: #8899a6;
+    }
+
+    /* Delete button */
+    .delete-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: transparent;
+      color: #e0245e;
+      border: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .delete-btn:hover {
+      color: #a81d45;
     }
   </style>
 </head>
