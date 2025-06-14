@@ -2,59 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Simple Blog</title>
   <style>
-    body { font-family: Arial; background: #f9f9f9; padding: 20px; }
-    .blog-post { background: #fff; padding: 10px; margin: 10px 0; border-radius: 4px; }
-    form { margin-top: 20px; background: #fff; padding: 10px; border-radius: 4px; }
-    input, textarea { width: 100%; margin-top: 5px; padding: 8px; }
-    button { margin-top: 10px; padding: 8px 12px; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+    form {
+      margin-bottom: 2rem;
+    }
+    input, textarea {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+    }
+    .post {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
   <h1>Simple Blog</h1>
-  <div id="posts"></div>
 
   <form id="postForm">
-    <h2>New Post</h2>
-    <label>Title:</label>
-    <input type="text" id="title" required />
-    <label>Content:</label>
-    <textarea id="content" rows="4" required></textarea>
-    <button type="submit">Submit</button>
+    <input type="text" id="title" placeholder="Post Title" required />
+    <textarea id="content" placeholder="Write your post..." rows="5" required></textarea>
+    <button type="submit">Submit Post</button>
   </form>
 
-  <script>
-    const backendUrl = 'https://simple-blog-frontend.onrender.com'; // Replace with your Render URL
+  <h2>All Posts</h2>
+  <div id="postsContainer"></div>
 
-    async function fetchPosts() {
-      const res = await fetch(`${backendUrl}/posts`);
+  <script>
+    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Replace this!
+
+    const form = document.getElementById('postForm');
+    const postsContainer = document.getElementById('postsContainer');
+
+    async function loadPosts() {
+      const res = await fetch(`${backendURL}/posts`);
       const posts = await res.json();
-      const container = document.getElementById('posts');
-      container.innerHTML = '';
+      postsContainer.innerHTML = '';
       posts.reverse().forEach(post => {
         const div = document.createElement('div');
-        div.className = 'blog-post';
+        div.className = 'post';
         div.innerHTML = `<h3>${post.title}</h3><p>${post.content}</p>`;
-        container.appendChild(div);
+        postsContainer.appendChild(div);
       });
     }
 
-    document.getElementById('postForm').addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('title').value;
       const content = document.getElementById('content').value;
-      await fetch(`${backendUrl}/posts`, {
+
+      await fetch(`${backendURL}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content })
       });
-      e.target.reset();
-      fetchPosts();
+
+      form.reset();
+      loadPosts(); // Refresh posts list
     });
 
-    fetchPosts();
+    loadPosts(); // Load posts on page load
   </script>
 </body>
 </html>
