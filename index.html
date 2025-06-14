@@ -118,7 +118,7 @@
   <div id="postsContainer"></div>
 
   <script>
-    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Replace with your actual backend
+    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Update to match your backend URL
     const postForm = document.getElementById('postForm');
     const postsContainer = document.getElementById('postsContainer');
     const authStatus = document.getElementById('authStatus');
@@ -149,13 +149,17 @@
       const username = document.getElementById('authUsername').value;
       const password = document.getElementById('authPassword').value;
 
-      await fetch(`${backendURL}/register`, {
+      const res = await fetch(`${backendURL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
 
-      alert('Registered. Now login.');
+      if (res.ok) {
+        alert('Registered successfully. Now login.');
+      } else {
+        alert('Registration failed.');
+      }
     }
 
     async function login() {
@@ -210,7 +214,7 @@
           <small>Posted by: ${post.username}</small>
         `;
 
-        if (user && post.username === user.username) {
+        if (user && (post.username === user.username || user.username === 'admin')) {
           const delBtn = document.createElement('button');
           delBtn.textContent = 'Delete';
           delBtn.className = 'delete-btn';
