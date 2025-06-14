@@ -1,537 +1,133 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Stylish Blog with Likes and Comments</title>
+  <title>Simple Blog</title>
   <style>
-    /* Reset and base */
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: #e6ecf0; /* Twitter light background */
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    #app-container {
-      width: 600px; /* Twitter timeline width */
-      background: white;
-      border-left: 1px solid #ddd;
-      border-right: 1px solid #ddd;
-      min-height: 100vh;
-      padding: 0 16px 24px;
-      box-sizing: border-box;
-    }
-
-    /* Header */
-    h1 {
-      font-weight: 800;
-      font-size: 24px;
-      padding: 16px 0;
-      border-bottom: 1px solid #eee;
-      color: #0f1419;
-      margin: 0;
-    }
-
-    /* Auth status */
-    #authStatus {
-      font-weight: 600;
-      padding: 12px 0;
-      color: #536471;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-      user-select: none;
-    }
-
-    /* Auth form - container flex row for inputs and buttons */
-    .auth-form {
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      gap: 8px;
-      flex-wrap: nowrap;
-      justify-content: center;
-      align-items: center;
-    }
-    /* Inputs */
-    .auth-form input[type="text"],
-    .auth-form input[type="password"] {
-      border: 1px solid #ccd6dd;
-      border-radius: 9999px;
-      padding: 8px 16px;
-      font-size: 14px;
-      width: 140px;
-      outline-offset: 2px;
-      box-sizing: border-box;
-    }
-    /* Buttons */
-    .auth-form button {
-      background-color: #1d9bf0; /* Twitter blue */
-      border: none;
-      color: white;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 9999px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.2s ease;
-      white-space: nowrap;
-    }
-    .auth-form button:hover {
-      background-color: #1a8cd8;
-    }
-
-    /* Post form */
-    #postForm {
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #postForm input,
-    #postForm textarea {
-      border: 1px solid #ccd6dd;
-      border-radius: 16px;
-      padding: 12px 16px;
-      font-size: 16px;
-      resize: none;
-      outline-offset: 2px;
-      box-sizing: border-box;
-      width: 100%;
-    }
-    #postForm button {
-      align-self: flex-end;
-      background-color: #1d9bf0;
-      border: none;
-      color: white;
-      font-weight: 700;
-      padding: 10px 20px;
-      border-radius: 9999px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s ease;
-    }
-    #postForm button:hover {
-      background-color: #1a8cd8;
-    }
-
-    /* Posts */
-    h2 {
-      font-weight: 700;
-      font-size: 20px;
-      padding: 12px 0 8px 0;
-      color: #0f1419;
-      border-bottom: 1px solid #eee;
-      margin: 0;
-    }
-    #postsContainer {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding-bottom: 24px;
-    }
-
-    .post {
-      background: white;
-      border: 1px solid #e1e8ed;
-      border-radius: 16px;
-      padding: 12px 16px;
-      box-shadow: none;
-      transition: background-color 0.15s ease;
-      position: relative;
-      cursor: default;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .post:hover {
-      background-color: #f5f8fa;
-    }
-
-    .post h3 {
-      margin: 0 0 4px 0;
-      font-weight: 700;
-      font-size: 16px;
-      color: #0f1419;
-    }
-
-    .post p {
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.4;
-      color: #536471;
-      white-space: pre-wrap;
-    }
-
-    .post small {
-      color: #536471;
-      font-size: 13px;
-      font-weight: 600;
-      user-select: none;
-    }
-
-    .delete-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: transparent;
-      border: none;
-      color: #f4212e;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 4px 8px;
-      border-radius: 12px;
-      transition: background-color 0.15s ease;
-    }
-    .delete-btn:hover {
-      background-color: #f4212e;
-      color: white;
-    }
-
-    /* Like & Comment buttons container */
-    .post-actions {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      user-select: none;
-    }
-    .like-btn, .comment-btn {
-      cursor: pointer;
-      color: #536471;
-      font-weight: 600;
-      font-size: 14px;
-      border-radius: 12px;
-      padding: 6px 12px;
-      transition: background-color 0.15s ease, color 0.15s ease;
-      border: none;
-      background: transparent;
-    }
-    .like-btn.liked {
-      color: #e0245e; /* Twitter red for liked */
-    }
-    .like-btn:hover,
-    .comment-btn:hover {
-      background-color: #e8f5fd;
-      color: #1d9bf0;
-    }
-
-    /* Likes count */
-    .likes-count {
-      margin-left: 6px;
-      color: #536471;
-      font-weight: 600;
-      user-select: none;
-    }
-
-    /* Comments section */
-    .comments-section {
-      border-top: 1px solid #e1e8ed;
-      padding-top: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .comments-section.active {
-      display: flex;
-    }
-    .comment {
-      background: #f5f8fa;
-      border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 14px;
-      color: #536471;
-      line-height: 1.3;
-    }
-    .comment strong {
-      color: #0f1419;
-    }
-
-    /* Comment input */
-    .comment-form {
-      display: flex;
-      margin-top: 8px;
-      gap: 8px;
-    }
-    .comment-form input {
-      flex-grow: 1;
-      border: 1px solid #ccd6dd;
-      border-radius: 9999px;
-      padding: 8px 16px;
-      font-size: 14px;
-      outline-offset: 2px;
-      box-sizing: border-box;
-    }
-    .comment-form button {
-      background-color: #1d9bf0;
-      border: none;
-      color: white;
-      font-weight: 700;
-      padding: 8px 16px;
-      border-radius: 9999px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.2s ease;
-      white-space: nowrap;
-    }
-    .comment-form button:hover {
-      background-color: #1a8cd8;
-    }
+    body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
+    input, textarea { width: 100%; margin: 5px 0; }
+    .post { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    .comments { margin-left: 20px; color: #444; }
   </style>
 </head>
 <body>
-  <div id="app-container">
-    <h1>Home</h1>
 
-    <div id="authStatus">Not logged in</div>
+<h2>Register</h2>
+<input id="reg-username" placeholder="Username">
+<input id="reg-password" type="password" placeholder="Password">
+<button onclick="register()">Register</button>
 
-    <div class="auth-form">
-      <input type="text" id="authUsername" placeholder="Username" required />
-      <input type="password" id="authPassword" placeholder="Password" required />
-      <button onclick="register()">Register</button>
-      <button onclick="login()">Login</button>
-      <button onclick="logout()">Logout</button>
-    </div>
+<h2>Login</h2>
+<input id="login-username" placeholder="Username">
+<input id="login-password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 
-    <form id="postForm" style="display:none;">
-      <input type="text" id="title" placeholder="What's happening?" required />
-      <textarea id="content" placeholder="Write your post..." rows="3" required></textarea>
-      <button type="submit">Tweet</button>
-    </form>
+<h2>Create Post</h2>
+<input id="title" placeholder="Title">
+<textarea id="content" placeholder="Content"></textarea>
+<button onclick="createPost()">Post</button>
 
-    <h2>Timeline</h2>
-    <div id="postsContainer"></div>
-  </div>
+<h2>All Posts</h2>
+<div id="posts"></div>
 
-  <script>
-    const backendURL = 'https://simple-blog-frontend.onrender.com'; // Update this if needed
+<script>
+let currentUser = null;
+const API = 'https://your-render-app-url.onrender.com'; // Change to your Render backend URL
 
-    const postForm = document.getElementById('postForm');
-    const postsContainer = document.getElementById('postsContainer');
-    const authStatus = document.getElementById('authStatus');
+function register() {
+  fetch(`${API}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: document.getElementById('reg-username').value,
+      password: document.getElementById('reg-password').value
+    })
+  }).then(res => res.json()).then(alert);
+}
 
-    function updateAuthUI() {
-      const user = getLoggedInUser();
-      if (user) {
-        authStatus.textContent = `Logged in as ${user.username}`;
-        postForm.style.display = 'flex';
-      } else {
-        authStatus.textContent = 'Not logged in';
-        postForm.style.display = 'none';
-      }
-    }
-
-    function getLoggedInUser() {
-      const user = localStorage.getItem('user');
-      return user ? JSON.parse(user) : null;
-    }
-
-    function logout() {
-      localStorage.removeItem('user');
-      updateAuthUI();
+function login() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  fetch(`${API}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  }).then(res => {
+    if (res.ok) {
+      currentUser = username;
+      alert('Logged in as ' + username);
       loadPosts();
+    } else {
+      alert('Login failed');
     }
+  });
+}
 
-    async function register() {
-      const username = document.getElementById('authUsername').value.trim();
-      const password = document.getElementById('authPassword').value.trim();
+function createPost() {
+  if (!currentUser) return alert('Login first');
+  fetch(`${API}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: document.getElementById('title').value,
+      content: document.getElementById('content').value,
+      username: currentUser
+    })
+  }).then(() => loadPosts());
+}
 
-      if (!username || !password) {
-        alert('Please enter username and password');
-        return;
-      }
-
-      const res = await fetch(`${backendURL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (res.ok) {
-        alert('Registered successfully. Now login.');
-      } else {
-        const err = await res.json();
-        alert('Registration failed: ' + err.message);
-      }
-    }
-
-    async function login() {
-      const username = document.getElementById('authUsername').value.trim();
-      const password = document.getElementById('authPassword').value.trim();
-
-      if (!username || !password) {
-        alert('Please enter username and password');
-        return;
-      }
-
-      const res = await fetch(`${backendURL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (res.ok) {
-        localStorage.setItem('user', JSON.stringify({ username }));
-        updateAuthUI();
-        loadPosts();
-      } else {
-        alert('Login failed');
-      }
-    }
-
-    postForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const user = getLoggedInUser();
-      if (!user) return alert('You must be logged in to post.');
-
-      const title = document.getElementById('title').value.trim();
-      const content = document.getElementById('content').value.trim();
-
-      if (!title || !content) {
-        alert('Title and content cannot be empty');
-        return;
-      }
-
-      await fetch(`${backendURL}/posts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, username: user.username })
-      });
-
-      postForm.reset();
-      loadPosts();
-    });
-
-    // Load posts from backend including likes and comments
-    async function loadPosts() {
-      const user = getLoggedInUser();
-      const res = await fetch(`${backendURL}/posts`);
-      const posts = await res.json();
-
-      postsContainer.innerHTML = '';
-
-      // Reverse so newest first
+function loadPosts() {
+  fetch(`${API}/posts`)
+    .then(res => res.json())
+    .then(posts => {
+      const container = document.getElementById('posts');
+      container.innerHTML = '';
       posts.reverse().forEach(post => {
         const div = document.createElement('div');
         div.className = 'post';
-
-        // Likes and comments stored in post.likes and post.comments (or empty arrays)
-        // Fallback if not present
-        if (!post.likes) post.likes = [];
-        if (!post.comments) post.comments = [];
-
-        const likedByUser = user ? post.likes.includes(user.username) : false;
-        const likesCount = post.likes.length;
-
         div.innerHTML = `
-          <h3>${post.title}</h3>
-          <p>${post.content}</p>
-          <small>Posted by: ${post.username}</small>
-
-          <div class="post-actions">
-            <button class="like-btn ${likedByUser ? 'liked' : ''}" aria-label="Like post">
-              ♥ Like <span class="likes-count">${likesCount}</span>
-            </button>
-            <button class="comment-btn" aria-label="Comment on post">💬 Comment</button>
-          </div>
-
-          <div class="comments-section">
-            ${post.comments.map(c => `<div class="comment"><strong>${c.username}:</strong> ${c.text}</div>`).join('')}
-            <form class="comment-form">
-              <input type="text" placeholder="Add a comment..." required />
-              <button type="submit">Reply</button>
-            </form>
+          <strong>${post.title}</strong> by ${post.username}<br>
+          ${post.content}<br>
+          Likes: ${post.likes || 0}
+          <button onclick="likePost('${post._id}')">Like</button>
+          ${post.username === currentUser || currentUser === 'admin' ? `<button onclick="deletePost('${post._id}')">Delete</button>` : ''}
+          <br>
+          <input id="comment-${post._id}" placeholder="Add comment">
+          <button onclick="addComment('${post._id}')">Comment</button>
+          <div class="comments">
+            ${post.comments.map(c => `• ${c}`).join('<br>')}
           </div>
         `;
-
-        // Delete button if user is admin or post owner
-        if (user && (user.username === 'admin' || user.username === post.username)) {
-          const delBtn = document.createElement('button');
-          delBtn.textContent = 'Delete';
-          delBtn.className = 'delete-btn';
-          delBtn.onclick = async () => {
-            if (!confirm('Are you sure you want to delete this post?')) return;
-            await fetch(`${backendURL}/posts/${post._id}`, {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username: user.username })
-            });
-            loadPosts();
-          };
-          div.appendChild(delBtn);
-        }
-
-        postsContainer.appendChild(div);
-
-        // Like button functionality
-        const likeBtn = div.querySelector('.like-btn');
-        likeBtn.addEventListener('click', async () => {
-          if (!user) {
-            alert('You must be logged in to like posts.');
-            return;
-          }
-
-          let updatedLikes;
-          if (likedByUser) {
-            // Remove like
-            updatedLikes = post.likes.filter(u => u !== user.username);
-          } else {
-            // Add like
-            updatedLikes = [...post.likes, user.username];
-          }
-
-          // Update on backend
-          await fetch(`${backendURL}/posts/${post._id}/likes`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ likes: updatedLikes })
-          });
-
-          loadPosts();
-        });
-
-        // Comment button toggles comments section
-        const commentBtn = div.querySelector('.comment-btn');
-        const commentsSection = div.querySelector('.comments-section');
-
-        commentBtn.addEventListener('click', () => {
-          commentsSection.classList.toggle('active');
-        });
-
-        // Comment form submission
-        const commentForm = div.querySelector('.comment-form');
-        commentForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          if (!user) {
-            alert('You must be logged in to comment.');
-            return;
-          }
-          const input = commentForm.querySelector('input');
-          const commentText = input.value.trim();
-          if (!commentText) return;
-
-          const newComments = [...post.comments, { username: user.username, text: commentText }];
-
-          await fetch(`${backendURL}/posts/${post._id}/comments`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comments: newComments })
-          });
-
-          input.value = '';
-          loadPosts();
-        });
+        container.appendChild(div);
       });
-    }
+    });
+}
 
-    updateAuthUI();
-    loadPosts();
-  </script>
+function likePost(id) {
+  fetch(`${API}/posts/${id}/likes`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' }
+  }).then(() => loadPosts());
+}
+
+function addComment(id) {
+  const comment = document.getElementById(`comment-${id}`).value;
+  fetch(`${API}/posts/${id}/comments`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comment })
+  }).then(() => loadPosts());
+}
+
+function deletePost(id) {
+  fetch(`${API}/posts/${id}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: currentUser })
+  }).then(() => loadPosts());
+}
+
+window.onload = loadPosts;
+</script>
+
 </body>
 </html>
-
